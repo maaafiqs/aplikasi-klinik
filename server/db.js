@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { hashPassword, encrypt } from './security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,10 +69,47 @@ try { db.exec(`ALTER TABLE doctors ADD COLUMN available_days TEXT`); } catch (er
 try {
   const adminExists = db.prepare("SELECT * FROM users WHERE email = 'admin@klinik.com'").get();
   if (!adminExists) {
-    db.prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)").run('Admin Klinik', 'admin@klinik.com', 'admin123', 'admin');
+    db.prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)").run('Admin Klinik', 'admin@klinik.com', hashPassword('admin123'), 'admin');
   }
 } catch (err) {
   console.error("Failed to create admin:", err);
+}
+
+// Migrate existing data (hashing plaintext passwords & encrypting plaintext NIKs)
+try {
+  // 1. Migrate users table
+  const users = db.prepare('SELECT id, password, nik FROM users').all();
+  const updatePasswordStmt = db.prepare('UPDATE users SET password = ? WHERE id = ?');
+  const updateNikStmt = db.prepare('UPDATE users SET nik = ? WHERE id = ?');
+  
+  for (const user of users) {
+    // If password is not hashed, hash it
+    if (user.password && !user.password.startsWith('$2a$') && !user.password.startsWith('$2b$')) {
+      const hashed = hashPassword(user.password);
+      updatePasswordStmt.run(hashed, user.id);
+      console.log(`Migrated password for user ID ${user.id}`);
+    }
+    // If NIK is plaintext, encrypt it
+    if (user.nik && !user.nik.includes(':')) {
+      const encrypted = encrypt(user.nik);
+      updateNikStmt.run(encrypted, user.id);
+      console.log(`Migrated NIK for user ID ${user.id}`);
+    }
+  }
+
+  // 2. Migrate patients table
+  const patients = db.prepare('SELECT id, nik FROM patients').all();
+  const updatePatientNikStmt = db.prepare('UPDATE patients SET nik = ? WHERE id = ?');
+  
+  for (const patient of patients) {
+    if (patient.nik && !patient.nik.includes(':')) {
+      const encrypted = encrypt(patient.nik);
+      updatePatientNikStmt.run(encrypted, patient.id);
+      console.log(`Migrated NIK for patient ID ${patient.id}`);
+    }
+  }
+} catch (err) {
+  console.error("Data migration failed:", err);
 }
 
 export default db;

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import db from './db.js';
+import { hashPassword, comparePassword, encrypt, decrypt } from './security.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,7 +20,7 @@ app.post('/api/register', (req, res) => {
   
   try {
     const stmt = db.prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
-    const result = stmt.run(name, email, password);
+    const result = stmt.run(name, email, hashPassword(password));
     res.status(201).json({ id: result.lastInsertRowid, message: 'User registered successfully' });
   } catch (error) {
     if (error.message.includes('UNIQUE constraint failed')) {
@@ -33,12 +34,12 @@ app.post('/api/register', (req, res) => {
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = db.prepare('SELECT * FROM users WHERE email = ? AND password = ?').get(email, password);
-    if (user) {
+    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    if (user && comparePassword(password, user.password)) {
       // In a real app, use JWT here. For simplicity we just return user details
       res.json({ message: 'Login successful', user: { 
         id: user.id, name: user.name, email: user.email, role: user.role,
-        tanggal_lahir: user.tanggal_lahir, nik: user.nik, jenis_kelamin: user.jenis_kelamin, 
+        tanggal_lahir: user.tanggal_lahir, nik: decrypt(user.nik), jenis_kelamin: user.jenis_kelamin, 
         jenis_pembayaran: user.jenis_pembayaran, no_kartu: user.no_kartu, alamat: user.alamat
       } });
     } else {
@@ -56,15 +57,19 @@ app.put('/api/users/:id', (req, res) => {
   
   try {
     let stmt;
+    const secureNik = nik ? encrypt(nik) : null;
     if (password) {
       stmt = db.prepare('UPDATE users SET name = ?, email = ?, password = ?, tanggal_lahir = ?, nik = ?, jenis_kelamin = ?, jenis_pembayaran = ?, no_kartu = ?, alamat = ? WHERE id = ?');
-      stmt.run(name, email, password, tanggal_lahir || null, nik || null, jenis_kelamin || 'Laki-laki', jenis_pembayaran || 'Umum', no_kartu || null, alamat || null, id);
+      stmt.run(name, email, hashPassword(password), tanggal_lahir || null, secureNik, jenis_kelamin || 'Laki-laki', jenis_pembayaran || 'Umum', no_kartu || null, alamat || null, id);
     } else {
       stmt = db.prepare('UPDATE users SET name = ?, email = ?, tanggal_lahir = ?, nik = ?, jenis_kelamin = ?, jenis_pembayaran = ?, no_kartu = ?, alamat = ? WHERE id = ?');
-      stmt.run(name, email, tanggal_lahir || null, nik || null, jenis_kelamin || 'Laki-laki', jenis_pembayaran || 'Umum', no_kartu || null, alamat || null, id);
+      stmt.run(name, email, tanggal_lahir || null, secureNik, jenis_kelamin || 'Laki-laki', jenis_pembayaran || 'Umum', no_kartu || null, alamat || null, id);
     }
     
     const updatedUser = db.prepare('SELECT id, name, email, role, tanggal_lahir, nik, jenis_kelamin, jenis_pembayaran, no_kartu, alamat FROM users WHERE id = ?').get(id);
+    if (updatedUser) {
+      updatedUser.nik = decrypt(updatedUser.nik);
+    }
     res.json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (error) {
     if (error.message.includes('UNIQUE constraint failed')) {
@@ -92,7 +97,7 @@ app.post('/api/users/admin', (req, res) => {
   }
   try {
     const stmt = db.prepare('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)');
-    const result = stmt.run(name, email, password, 'admin');
+    const result = stmt.run(name, email, hashPassword(password), 'admin');
     res.status(201).json({ id: result.lastInsertRowid, message: 'Admin added successfully' });
   } catch (error) {
     if (error.message.includes('UNIQUE constraint failed')) {
@@ -139,7 +144,7 @@ app.post('/api/patients', (req, res) => {
     `);
     
     const result = stmt.run(
-      user_id || null, doctor_id, nama_pasien, nik, tanggal_lahir, jenis_kelamin, 
+      user_id || null, doctor_id, nama_pasien, encrypt(nik), tanggal_lahir, jenis_kelamin, 
       alamat, poli_tujuan, tanggal_kunjungan, jenis_pembayaran, no_kartu || null, no_antrian
     );
     
@@ -159,7 +164,11 @@ app.get('/api/patients', (req, res) => {
       LEFT JOIN doctors d ON p.doctor_id = d.id 
       ORDER BY p.created_at DESC
     `).all();
-    res.json(patients);
+    const decryptedPatients = patients.map(p => ({
+      ...p,
+      nik: decrypt(p.nik)
+    }));
+    res.json(decryptedPatients);
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
@@ -186,7 +195,11 @@ app.get('/api/patients/history/:userId', (req, res) => {
       WHERE p.user_id = ? 
       ORDER BY p.created_at DESC
     `).all(req.params.userId);
-    res.json(patients);
+    const decryptedPatients = patients.map(p => ({
+      ...p,
+      nik: decrypt(p.nik)
+    }));
+    res.json(decryptedPatients);
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
