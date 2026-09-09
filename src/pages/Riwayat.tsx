@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock } from 'lucide-react';
+import { Clock, Search, Filter } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 
 const Riwayat = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('Semua');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +35,16 @@ const Riwayat = () => {
     fetchHistory();
   }, [navigate]);
 
+  const filteredHistory = history.filter(item => {
+    const matchSearch = 
+      (item.poli_tujuan && item.poli_tujuan.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.nama_pasien && item.nama_pasien.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.no_antrian && item.no_antrian.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.doctor_name && item.doctor_name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchStatus = filterStatus === 'Semua' || item.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
   if (loading) {
     return <div className="container" style={{ textAlign: 'center', marginTop: '2rem' }}>Loading...</div>;
   }
@@ -50,13 +62,50 @@ const Riwayat = () => {
           </div>
         </div>
 
-        {history.length === 0 ? (
+        {/* Filter & Search Bar */}
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 250px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              type="text"
+              placeholder="Cari poli, dokter, no. antrean..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="form-input"
+              style={{ paddingLeft: '2.5rem' }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <Filter size={16} style={{ color: 'var(--text-muted)' }} />
+            {['Semua', 'Menunggu', 'Diperiksa', 'Selesai'].map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setFilterStatus(status)}
+                style={{
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '9999px',
+                  border: filterStatus === status ? '1px solid var(--primary-yellow-hover)' : '1px solid var(--border-color)',
+                  backgroundColor: filterStatus === status ? 'rgba(251, 191, 36, 0.15)' : '#fff',
+                  color: filterStatus === status ? 'var(--primary-yellow-hover)' : 'var(--text-muted)',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer'
+                }}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredHistory.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-            Belum ada riwayat pendaftaran.
+            Tidak ada riwayat pendaftaran yang cocok.
           </div>
         ) : (
           <div style={{ display: 'grid', gap: '1rem' }}>
-            {history.map((item, index) => (
+            {filteredHistory.map((item, index) => (
               <div key={index} style={{ border: '1px solid var(--border-color)', padding: '1.5rem', borderRadius: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
