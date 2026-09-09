@@ -1,11 +1,22 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { HeartPulse, LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { HeartPulse, LogOut, Menu, X, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [timeString, setTimeString] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setTimeString(now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const isActive = (path: string) => {
     return location.pathname === path ? 'active' : '';
@@ -25,10 +36,27 @@ const Navbar = () => {
   return (
     <nav className="navbar glass">
       <div className="container nav-container">
-        <Link to="/" className="nav-logo" onClick={closeMenu}>
-          <HeartPulse size={28} className="nav-logo-icon" />
-          Klinik Maaafiqs
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Link to="/" className="nav-logo" onClick={closeMenu}>
+            <HeartPulse size={28} className="nav-logo-icon" />
+            Klinik Maaafiqs
+          </Link>
+          {timeString && (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.35rem', 
+              fontSize: '0.8rem', 
+              color: 'var(--text-muted)',
+              backgroundColor: 'rgba(0,0,0,0.03)',
+              padding: '0.25rem 0.6rem',
+              borderRadius: '9999px'
+            }}>
+              <Clock size={13} style={{ color: 'var(--primary-yellow-hover)' }} />
+              <span style={{ fontWeight: 600, fontFamily: 'monospace' }}>{timeString}</span>
+            </div>
+          )}
+        </div>
         
         <button className="nav-mobile-menu" onClick={() => setIsMenuOpen(!isMenuOpen)}>
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
