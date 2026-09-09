@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Activity, Clock, ShieldCheck, Info } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
+import { ActiveQueuesData } from '../types';
 
 const Home = () => {
-  const [activeQueues, setActiveQueues] = useState<{ running: any[], waiting: any[] }>({ running: [], waiting: [] });
+  const [activeQueues, setActiveQueues] = useState<ActiveQueuesData>({ running: [], waiting: [] });
 
   useEffect(() => {
     const fetchQueues = async () => {
