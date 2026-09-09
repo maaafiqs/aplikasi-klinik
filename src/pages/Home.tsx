@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Activity, Clock, ShieldCheck, Info } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Home = () => {
   const [activeQueues, setActiveQueues] = useState<{ running: any[], waiting: any[] }>({ running: [], waiting: [] });
@@ -8,7 +9,7 @@ const Home = () => {
   useEffect(() => {
     const fetchQueues = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/queues/active');
+        const res = await fetch(`${API_BASE_URL}/queues/active`);
         if (res.ok) {
           setActiveQueues(await res.json());
         }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,7 +14,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      const response = await fetch('http://localhost:3001/api/login', {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -24,10 +25,11 @@ const Login = () => {
         localStorage.setItem('user', JSON.stringify(data.user));
         navigate('/pendaftaran');
       } else {
-        setError(data.error);
+        setError(data.error || 'Login gagal');
       }
     } catch (err) {
-      setError('Terjadi kesalahan pada server');
+      console.error('Login error:', err);
+      setError('Tidak dapat terhubung ke server backend. Pastikan server backend sedang berjalan (port 3001).');
     }
   };
 

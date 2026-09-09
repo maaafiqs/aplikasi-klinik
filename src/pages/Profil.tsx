@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Eye, EyeOff } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Profil = () => {
   const [formData, setFormData] = useState({ 
@@ -23,8 +24,8 @@ const Profil = () => {
     const user = JSON.parse(userStr);
     setUserId(user.id);
     setFormData({ 
-      name: user.name, 
-      email: user.email, 
+      name: user.name || '', 
+      email: user.email || '', 
       password: '',
       tanggal_lahir: user.tanggal_lahir || '',
       nik: user.nik || '',
@@ -45,7 +46,7 @@ const Profil = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -22,7 +23,7 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/register', {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -33,10 +34,11 @@ const Register = () => {
         alert('Registrasi berhasil! Silakan login.');
         navigate('/login');
       } else {
-        setError(data.error);
+        setError(data.error || 'Registrasi gagal');
       }
     } catch (err) {
-      setError('Terjadi kesalahan pada server');
+      console.error('Register error:', err);
+      setError('Tidak dapat terhubung ke server backend. Pastikan server backend sedang berjalan (port 3001).');
     }
   };
 

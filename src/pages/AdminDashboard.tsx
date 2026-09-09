@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Users, Stethoscope, Trash2, Plus, Volume2, UserCog } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('pasien');
@@ -45,9 +46,9 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const [patientsRes, doctorsRes, usersRes] = await Promise.all([
-        fetch('http://localhost:3001/api/patients'),
-        fetch('http://localhost:3001/api/doctors'),
-        fetch('http://localhost:3001/api/users')
+        fetch(`${API_BASE_URL}/patients`),
+        fetch(`${API_BASE_URL}/doctors`),
+        fetch(`${API_BASE_URL}/users`)
       ]);
       if (patientsRes.ok) setPatients(await patientsRes.json());
       if (doctorsRes.ok) setDoctors(await doctorsRes.json());
@@ -70,7 +71,7 @@ const AdminDashboard = () => {
       const scheduleString = `${docDays.join(', ')} (${docTimeStart} - ${docTimeEnd})`;
       const availableDaysStr = docDays.join(',');
       
-      const res = await fetch('http://localhost:3001/api/doctors', {
+      const res = await fetch(`${API_BASE_URL}/doctors`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: docName, specialty: docSpecialty, schedule: scheduleString, available_days: availableDaysStr })
@@ -91,7 +92,7 @@ const AdminDashboard = () => {
   const handleDeleteDoctor = async (id: number) => {
     if (!window.confirm('Yakin ingin menghapus dokter ini?')) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/doctors/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/doctors/${id}`, { method: 'DELETE' });
       if (res.ok) fetchData();
     } catch (error) {
       console.error('Failed to delete doctor', error);
@@ -100,7 +101,7 @@ const AdminDashboard = () => {
 
   const handleUpdateStatus = async (id: number, status: string, playSound: boolean = false) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/patients/${id}/status`, {
+      const res = await fetch(`${API_BASE_URL}/patients/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -119,7 +120,7 @@ const AdminDashboard = () => {
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:3001/api/users/admin', {
+      const res = await fetch(`${API_BASE_URL}/users/admin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newUserName, email: newUserEmail, password: newUserPassword })
@@ -140,7 +141,7 @@ const AdminDashboard = () => {
   const handleDeleteUser = async (id: number) => {
     if (!window.confirm('Yakin ingin menghapus pengguna ini?')) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/users/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/users/${id}`, { method: 'DELETE' });
       if (res.ok) fetchData();
     } catch (error) {
       console.error('Failed to delete user', error);

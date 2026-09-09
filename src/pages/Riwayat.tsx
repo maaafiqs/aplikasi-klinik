@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Riwayat = () => {
   const [history, setHistory] = useState<any[]>([]);
@@ -17,7 +18,7 @@ const Riwayat = () => {
 
       const user = JSON.parse(userStr);
       try {
-        const response = await fetch(`http://localhost:3001/api/patients/history/${user.id}`);
+        const response = await fetch(`${API_BASE_URL}/patients/history/${user.id}`);
         if (response.ok) {
           const data = await response.json();
           setHistory(data);

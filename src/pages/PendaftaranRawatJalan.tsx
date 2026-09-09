@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarPlus } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const PendaftaranRawatJalan = () => {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ const PendaftaranRawatJalan = () => {
     }
     const fetchDoctors = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/doctors');
+        const response = await fetch(`${API_BASE_URL}/doctors`);
         if (response.ok) {
           const data = await response.json();
           setDoctors(data);
@@ -115,7 +116,7 @@ const PendaftaranRawatJalan = () => {
     
     try {
       const payload = { ...formData, user_id: userId };
-      const response = await fetch('http://localhost:3001/api/patients', {
+      const response = await fetch(`${API_BASE_URL}/patients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
