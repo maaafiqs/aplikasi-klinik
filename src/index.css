@@ -308,3 +308,27 @@ a {
     white-space: nowrap;
   }
 }
+
+/* Print styles for Queue Ticket */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .printable-ticket, .printable-ticket * {
+    visibility: visible;
+  }
+  .printable-ticket {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    box-shadow: none !important;
+    border: 2px dashed #333 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+

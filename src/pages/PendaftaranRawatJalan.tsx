@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarPlus } from 'lucide-react';
+import { CalendarPlus, Printer } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 
 const PendaftaranRawatJalan = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<number | null>(null);
+  const [ticketData, setTicketData] = useState<any | null>(null);
   
   const [doctors, setDoctors] = useState<any[]>([]);
   const [polis, setPolis] = useState<string[]>([]);
@@ -125,6 +126,15 @@ const PendaftaranRawatJalan = () => {
       const data = await response.json();
       
       if (response.ok) {
+        const selectedDoc = doctors.find(d => String(d.id) === String(formData.doctor_id));
+        setTicketData({
+          no_antrian: data.no_antrian,
+          nama_pasien: formData.nama_pasien,
+          poli_tujuan: formData.poli_tujuan,
+          doctor_name: selectedDoc ? selectedDoc.name : '-',
+          tanggal_kunjungan: formData.tanggal_kunjungan,
+          jenis_pembayaran: formData.jenis_pembayaran,
+        });
         setMessage({ type: 'success', text: `Pendaftaran rawat jalan berhasil! Nomor Antrean Anda: ${data.no_antrian}. Silakan datang sesuai jadwal.` });
         // Reset form except user details
         setFormData(prev => ({
@@ -182,17 +192,47 @@ const PendaftaranRawatJalan = () => {
                 </svg>
               </div>
               <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1F2937' }}>Pendaftaran Berhasil!</h3>
-              <p style={{ color: '#6B7280', marginBottom: '1.5rem' }}>{message.text}</p>
-              <button 
-                onClick={() => {
-                  setMessage({ type: '', text: '' });
-                  navigate('/riwayat'); // Arahkan ke riwayat
-                }}
-                className="btn btn-primary" 
-                style={{ width: '100%', padding: '0.75rem' }}
-              >
-                Lihat Riwayat
-              </button>
+              <p style={{ color: '#6B7280', marginBottom: '1rem', fontSize: '0.9rem' }}>{message.text}</p>
+              
+              {ticketData && (
+                <div className="printable-ticket" style={{
+                  border: '2px dashed #F59E0B',
+                  borderRadius: '0.75rem',
+                  padding: '1rem',
+                  marginBottom: '1.25rem',
+                  backgroundColor: '#FFFBEB'
+                }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#92400E', letterSpacing: '0.05em' }}>KLINIK SEHAT • TIKET ANTREAN</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#D97706', margin: '0.25rem 0' }}>{ticketData.no_antrian}</div>
+                  <div style={{ fontSize: '0.95rem', color: '#1F2937', fontWeight: 700 }}>{ticketData.poli_tujuan}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#4B5563' }}>Dokter: {ticketData.doctor_name}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#4B5563' }}>Pasien: {ticketData.nama_pasien} ({ticketData.jenis_pembayaran})</div>
+                  <div style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '0.25rem' }}>Tanggal: {ticketData.tanggal_kunjungan}</div>
+                </div>
+              )}
+
+              <div className="no-print" style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  type="button"
+                  onClick={() => window.print()}
+                  className="btn btn-secondary" 
+                  style={{ flex: 1, padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  <Printer size={18} /> Cetak
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setMessage({ type: '', text: '' });
+                    setTicketData(null);
+                    navigate('/riwayat');
+                  }}
+                  className="btn btn-primary" 
+                  style={{ flex: 1, padding: '0.75rem' }}
+                >
+                  Lihat Riwayat
+                </button>
+              </div>
             </div>
             <style>{`
               @keyframes popIn {
