@@ -121,5 +121,53 @@ Buka peramban Anda di: **`http://localhost:5173`**
 
 ---
 
+## 📁 Struktur Direktori Proyek
+
+```text
+aplikasi-klinik/
+├── .env.example          # Template konfigurasi environment variable
+├── dev.js                # Concurrent runner untuk backend & frontend
+├── package.json          # Manifest dependensi & script runner
+├── vite.config.ts        # Konfigurasi Vite & reverse proxy /api
+├── server/
+│   ├── db.js             # Inisialisasi SQLite database & migrasi otomatis
+│   ├── index.js          # Express server & REST API endpoints
+│   ├── security.js       # Hashing password (Bcrypt) & enkripsi NIK (AES-256)
+│   └── klinik.db         # Database SQLite lokal (di-ignore git)
+└── src/
+    ├── config/           # Konfigurasi URL API terpusat
+    ├── components/       # Komponen UI (Navbar, Toast, dll.)
+    ├── pages/            # Halaman (Home, Login, Register, Pendaftaran, dll.)
+    ├── services/         # Layer pemanggilan API (auth, patient, doctor, queue)
+    ├── types/            # Definisi TypeScript interface
+    └── utils/            # Utilitas helper (Audio Chime synthesizer)
+```
+
+---
+
+## 📋 Perintah Script NPM
+
+| Perintah | Fungsi |
+|---|---|
+| `npm run dev` | Menjalankan backend server (port 3001) dan frontend Vite (port 5173) bersamaan |
+| `npm run server` | Menjalankan hanya backend Express dengan `--watch` |
+| `npm run dev:client` | Menjalankan hanya frontend Vite |
+| `npm run build` | Melakukan compile TypeScript (`tsc`) & bundle produksi Vite |
+| `npm run preview` | Meninjau hasil build produksi secara lokal |
+
+---
+
+## 🗺️ Roadmap Pengembangan Selanjutnya
+- [x] Otomasi runner backend + frontend dalam satu perintah
+- [x] Enkripsi NIK Pasien (AES-256-CBC) & Bcrypt Password Hashing
+- [x] Cetak Tiket Antrean Fisik / PDF
+- [x] Notifikasi Audio Chime pada pemanggilan antrean di dashboard admin
+- [x] Pencarian & filter riwayat kunjungan pasien
+- [ ] Export laporan antrean ke format Excel/CSV untuk rekam medis klinik
+- [ ] Integrasi WhatsApp Gateway untuk pengingat jadwal antrean pasien
+
+---
+
 ## 📜 Lisensi
 Dikembangkan untuk kebutuhan pelayanan kesehatan masyarakat. Lisensi Open-Source MIT.
+
