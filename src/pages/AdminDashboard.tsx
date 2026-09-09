@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Users, Stethoscope, Trash2, Plus, Volume2, UserCog } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
+import { playQueueChime } from '../utils/audio';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('pasien');
@@ -107,8 +108,8 @@ const AdminDashboard = () => {
         body: JSON.stringify({ status })
       });
       if (res.ok) {
-        if (playSound && audioRef.current) {
-          audioRef.current.play().catch(e => console.error('Audio play failed', e));
+        if (playSound) {
+          playQueueChime();
         }
         fetchData();
       }
