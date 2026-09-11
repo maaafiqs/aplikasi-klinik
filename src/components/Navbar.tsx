@@ -19,7 +19,10 @@ const Navbar = () => {
   }, []);
 
   const isActive = (path: string) => {
-    return location.pathname === path ? 'active' : '';
+    if (path.startsWith('/#')) {
+      return location.pathname === '/' && location.hash === path.substring(1) ? 'active' : '';
+    }
+    return location.pathname === path && !location.hash ? 'active' : '';
   };
 
   const handleLogout = () => {
@@ -29,6 +32,18 @@ const Navbar = () => {
   };
 
   const closeMenu = () => setIsMenuOpen(false);
+
+  const handleSectionClick = (hash: string) => {
+    closeMenu();
+    if (location.pathname === '/') {
+      const elem = document.querySelector(hash);
+      if (elem) {
+        elem.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      navigate(`/${hash}`);
+    }
+  };
 
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : null;
@@ -63,23 +78,46 @@ const Navbar = () => {
         </button>
 
         <div className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
-          <Link to="/" className={`nav-link ${isActive('/')}`} onClick={closeMenu}>Home</Link>
+          <Link to="/" className={`nav-link ${isActive('/')}`} onClick={closeMenu}>
+            Home
+          </Link>
+          <Link to="/pendaftaran" className={`nav-link ${isActive('/pendaftaran')}`} onClick={closeMenu}>
+            Pendaftaran
+          </Link>
+          <a 
+            href="#jadwal-dokter" 
+            className={`nav-link ${isActive('/#jadwal-dokter')}`} 
+            onClick={(e) => { e.preventDefault(); handleSectionClick('#jadwal-dokter'); }}
+          >
+            Jadwal Dokter
+          </a>
+          <a 
+            href="#antrean-live" 
+            className={`nav-link ${isActive('/#antrean-live')}`} 
+            onClick={(e) => { e.preventDefault(); handleSectionClick('#antrean-live'); }}
+          >
+            Info Antrean
+          </a>
+          <Link to="/riwayat" className={`nav-link ${isActive('/riwayat')}`} onClick={closeMenu}>
+            Riwayat
+          </Link>
+
           {user ? (
             <>
-              {user.role === 'admin' ? (
-                <Link to="/admin" className={`nav-link ${isActive('/admin')}`} style={{ color: 'var(--primary-yellow-hover)', fontWeight: '600' }} onClick={closeMenu}>Admin</Link>
-              ) : (
-                <>
-                  <Link to="/pendaftaran" className={`nav-link ${isActive('/pendaftaran')}`} onClick={closeMenu}>Pendaftaran</Link>
-                  <Link to="/riwayat" className={`nav-link ${isActive('/riwayat')}`} onClick={closeMenu}>Riwayat</Link>
-                </>
+              {user.role === 'admin' && (
+                <Link to="/admin" className={`nav-link ${isActive('/admin')}`} style={{ color: 'var(--primary-yellow-hover)', fontWeight: '600' }} onClick={closeMenu}>
+                  Admin
+                </Link>
               )}
-              <Link to="/profil" className={`nav-link ${isActive('/profil')}`} onClick={closeMenu}>Profil</Link>
+              <Link to="/profil" className={`nav-link ${isActive('/profil')}`} onClick={closeMenu}>
+                Profil
+              </Link>
               <button 
                 onClick={handleLogout} 
                 className="btn btn-primary" 
                 style={{ 
                   backgroundColor: '#ef4444', 
+                  color: '#ffffff',
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '0.5rem',
@@ -92,8 +130,12 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/login" className={`nav-link ${isActive('/login')}`} onClick={closeMenu}>Login</Link>
-              <Link to="/register" className="btn btn-primary" onClick={closeMenu}>Register</Link>
+              <Link to="/login" className={`nav-link ${isActive('/login')}`} onClick={closeMenu}>
+                Login
+              </Link>
+              <Link to="/register" className="btn btn-primary" onClick={closeMenu}>
+                Register
+              </Link>
             </>
           )}
         </div>

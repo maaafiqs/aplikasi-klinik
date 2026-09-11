@@ -255,6 +255,20 @@ app.get('/api/queues/active', (req, res) => {
   }
 });
 
+// Get clinic stats
+app.get('/api/stats', (req, res) => {
+  try {
+    const totalPatients = db.prepare('SELECT COUNT(*) as count FROM patients').get().count;
+    const totalDoctors = db.prepare('SELECT COUNT(*) as count FROM doctors').get().count;
+    const totalPolis = db.prepare('SELECT COUNT(DISTINCT specialty) as count FROM doctors').get().count;
+    const activeToday = db.prepare("SELECT COUNT(*) as count FROM patients WHERE date(created_at) = date('now')").get().count;
+    res.json({ totalPatients, totalDoctors, totalPolis, activeToday });
+  } catch (error) {
+    console.error('Stats error:', error);
+    res.status(500).json({ error: error.message || 'Database error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
